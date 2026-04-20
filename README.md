@@ -50,3 +50,5 @@ The image is automatically built and pushed to GHCR on every push to main:
 ```
 ghcr.io/yourusername/cloudflare-ddns:latest
 ```
+update-dns.sh is written by claude.ai
+git workflow, readme and DockerFile is written by opencode.ai
