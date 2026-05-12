@@ -2,6 +2,7 @@
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 SLEEP_INTERVAL="${SLEEP_INTERVAL:-300}"
+EXTERNAL_IP="0.0.0.0"
 # ──────────────────────────────────────────────────────────────────────────────
 
 while true; do
@@ -9,7 +10,27 @@ while true; do
   echo "🕐 $(date '+%Y-%m-%d %H:%M:%S') — Starting DNS check..."
   echo "────────────────────────────────────────────"
 
-  # Step 1 — Get Zone ID
+  # Step 1 — Get external IP
+  echo "🌐 Fetching external IP..."
+  NEW_EXTERNAL_IP=$(curl -s ifconfig.me)
+
+  if [ -z "$NEW_EXTERNAL_IP" ]; then
+    echo "❌ Failed to fetch external IP."
+    echo "⏳ Retrying in $SLEEP_INTERVAL seconds..."
+    sleep $SLEEP_INTERVAL
+    continue
+  fi
+    
+  if [ "$NEW_EXTERNAL_IP" = "$EXTERNAL_IP" ]; then
+    echo "🌐 External IP: $NEW_EXTERNAL_IP No IP change detected."
+    sleep $SLEEP_INTERVAL
+    continue
+  fi
+
+  EXTERNAL_IP=$NEW_EXTERNAL_IP
+  echo "🌐 Setting DNS to: $EXTERNAL_IP."
+  
+  # Step 2 — Get Zone ID
   echo "🔍 Fetching Zone ID for $ZONE_NAME..."
   ZONE_RESPONSE=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=$ZONE_NAME" \
     -H "Authorization: Bearer $API_TOKEN" \
@@ -25,7 +46,7 @@ while true; do
   fi
   echo "✅ Zone ID: $ZONE_ID"
 
-  # Step 2 — Get Record ID and current IP
+  # Step 3 — Get Record ID and current IP
   echo "🔍 Fetching DNS record for $RECORD_NAME..."
   RECORD_RESPONSE=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=A&name=$RECORD_NAME" \
     -H "Authorization: Bearer $API_TOKEN" \
@@ -42,18 +63,6 @@ while true; do
   fi
   echo "✅ Record ID: $RECORD_ID"
   echo "📡 Current DNS IP: $CURRENT_DNS_IP"
-
-  # Step 3 — Get external IP
-  echo "🌐 Fetching external IP..."
-  EXTERNAL_IP=$(curl -s ifconfig.me)
-
-  if [ -z "$EXTERNAL_IP" ]; then
-    echo "❌ Failed to fetch external IP."
-    echo "⏳ Retrying in $SLEEP_INTERVAL seconds..."
-    sleep $SLEEP_INTERVAL
-    continue
-  fi
-  echo "🌐 External IP: $EXTERNAL_IP"
 
   # Step 4 — Compare and update if different
   if [ "$EXTERNAL_IP" = "$CURRENT_DNS_IP" ]; then
