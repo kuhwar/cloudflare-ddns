@@ -35,7 +35,7 @@ docker run -d \
 ```yaml
 services:
   cloudflare-ddns:
-    image: ghcr.io/yourusername/cloudflare-ddns:latest
+    image: ghcr.io/kuhwar/cloudflare-ddns:latest
     environment:
       - API_TOKEN=your_token
       - ZONE_NAME=example.com
@@ -48,7 +48,7 @@ services:
 
 The image is automatically built and pushed to GHCR on every push to main:
 ```
-ghcr.io/yourusername/cloudflare-ddns:latest
+ghcr.io/kuhwar/cloudflare-ddns:latest
 ```
 update-dns.sh is written by claude.ai
 git workflow, readme and DockerFile is written by opencode.ai
